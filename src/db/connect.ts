@@ -1,6 +1,16 @@
-const connectDB = (data: string) => {
-  console.log("Console from db/connect.ts");
-  console.log(data);
+import mongoose from "mongoose";
+
+const connectDB = (url: string): Promise<typeof mongoose> => {
+  return mongoose
+    .connect(url)
+    .then(() => {
+      console.log("Connected to the Database...");
+      return mongoose;
+    })
+    .catch((err) => {
+      console.log(err);
+      process.exit(1);
+    });
 };
 
 export default connectDB;
