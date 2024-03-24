@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import connectDB from "./db/connect";
 import userRoute from "./routes/user.routes";
@@ -12,7 +12,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.use((req, res, next) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+  console.error(err.stack);
+  res.status(500).send("Something went wrong!");
+});
+
+app.use((req: Request, res: Response, next) => {
   console.log(`Incoming request: ${req.method} ${req.path}`);
   next();
 });
