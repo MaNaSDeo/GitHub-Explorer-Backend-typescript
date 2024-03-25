@@ -57,6 +57,9 @@ const userSchema = new mongoose.Schema({
   updated_at: {
     type: String,
   },
+  friends: {
+    type: Object,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
