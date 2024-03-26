@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import axios from "axios";
 import * as dotenv from "dotenv";
 import User from "../models/Users";
+import { SortOrder } from "mongoose";
 
 interface SearchQuery {
   username?: RegExp;
@@ -168,8 +169,27 @@ const updateUser = async (req: Request, res: Response) => {
 };
 
 const listUsers = async (req: Request, res: Response) => {
-  const query = req.query;
-  res.json(query);
+  try {
+    const { sortBy } = req.query; // Get the field to sort by from query parameters
+    let sortCriteria: { [key: string]: SortOrder | { $meta: any } } = {}; // Define empty object for sorting criteria
+
+    // Check if sortBy parameter is provided and set sorting criteria accordingly
+    if (typeof sortBy === "string") {
+      // Example: sortBy=name or sortBy=followers
+      sortCriteria[sortBy] = 1; // Sort in ascending order based on the specified field
+    } else {
+      // Default sorting criteria if sortBy parameter is not provided
+      sortCriteria["username"] = 1; // Sort by username in ascending order
+    }
+
+    // Fetch users from the database and apply sorting
+    const users = await User.find({ isDeleted: false }).sort(sortCriteria);
+
+    res.json(users); // Send the sorted list of users as JSON response
+  } catch (error) {
+    console.error("Error listing users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export {
