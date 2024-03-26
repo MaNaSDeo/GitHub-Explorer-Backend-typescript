@@ -3,6 +3,12 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 import User from "../models/Users";
 
+interface SearchQuery {
+  username?: { $regex: string; $options: string };
+  location?: { $regex: string; $options: string };
+  [key: string]: { $regex: string; $options: string } | number | undefined;
+}
+
 dotenv.config();
 
 const GIT_URI = process.env.GIT_URL;
@@ -86,16 +92,41 @@ const findMutualFollowers = async (req: Request, res: Response) => {
 
 const searchUsers = async (req: Request, res: Response) => {
   const { username, location, ...otherParams } = req.query;
-  if (username && location) {
-    res.json({ username, location });
+
+  try {
+    const searchQuery: SearchQuery = {}; // Build the search query object
+
+    if (username) {
+      searchQuery.username = { $regex: username as string, $options: "i" };
+    }
+    if (location) {
+      searchQuery.location = { $regex: location as string, $options: "i" };
+    }
+
+    Object.keys(otherParams).forEach((param) => {
+      console.log("param: ", param);
+      if (!isNaN(Number(otherParams[param]))) {
+        (searchQuery as any) = Number(otherParams[param]);
+      } else {
+        (searchQuery as any)[param] = {
+          $regex: otherParams[param] as string,
+          $option: "i",
+        };
+      }
+    }); // Add other search parameters to the query object
+
+    const users = await User.find(searchQuery); // Find users in the database based on the search query
+
+    if (users.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found matching the search criteria" });
+    }
+
+    res.status(200).json({ message: "Users found", users });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching for users", error });
   }
-  if (username) {
-    res.json(username);
-  }
-  if (location) {
-    res.json(location);
-  }
-  res.json({ method: "searchUsers" });
 };
 
 const deleteUser = async (req: Request, res: Response) => {
