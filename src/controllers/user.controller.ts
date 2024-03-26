@@ -146,9 +146,25 @@ const deleteUser = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   const { username } = req.params;
-  //   const { location, blog, bio } = req.body;
-  const body = req.body;
-  res.json({ username, body });
+  const { location, blog, bio } = req.body;
+
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { username: new RegExp(`^${username}$`, "i") },
+      { $set: { location, blog, bio } },
+      { new: true }
+    ); // Find the user and update their details
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "User updated successfully", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating user", error });
+  }
 };
 
 const listUsers = async (req: Request, res: Response) => {
