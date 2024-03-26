@@ -4,9 +4,9 @@ import * as dotenv from "dotenv";
 import User from "../models/Users";
 
 interface SearchQuery {
-  username?: { $regex: string; $options: string };
-  location?: { $regex: string; $options: string };
-  [key: string]: { $regex: string; $options: string } | number | undefined;
+  username?: RegExp;
+  location?: RegExp;
+  [key: string]: RegExp | number | boolean | undefined;
 }
 
 dotenv.config();
@@ -91,31 +91,62 @@ const findMutualFollowers = async (req: Request, res: Response) => {
 };
 
 const searchUsers = async (req: Request, res: Response) => {
+  const { ...queries } = req.query;
+
+  try {
+    const users = await User.find({ ...queries });
+
+    if (users.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found matching the search criteria" });
+    }
+    console.log("queries: ", queries);
+    console.log("users: ", users);
+
+    res.status(200).json({ message: "Users found!", queries, users });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching for users", error });
+  }
+};
+
+/*
+const searchUsers = async (req: Request, res: Response) => {
   const { username, location, ...otherParams } = req.query;
 
   try {
-    const searchQuery: SearchQuery = {}; // Build the search query object
+    const searchQuery: SearchQuery = {};
 
     if (username) {
-      searchQuery.username = { $regex: username as string, $options: "i" };
+      searchQuery.username = new RegExp(username as string, "i");
     }
+
     if (location) {
-      searchQuery.location = { $regex: location as string, $options: "i" };
+      searchQuery.location = new RegExp(location as string, "i");
     }
 
     Object.keys(otherParams).forEach((param) => {
-      console.log("param: ", param);
       if (!isNaN(Number(otherParams[param]))) {
-        (searchQuery as any) = Number(otherParams[param]);
+        searchQuery[param] = Number(otherParams[param]);
+      } else if (typeof otherParams[param] === "boolean") {
+        searchQuery[param] = otherParams[param] === "true";
       } else {
-        (searchQuery as any)[param] = {
-          $regex: otherParams[param] as string,
-          $option: "i",
-        };
+        searchQuery[param] = new RegExp(otherParams[param] as string, "i");
       }
-    }); // Add other search parameters to the query object
+    });
 
-    const users = await User.find(searchQuery); // Find users in the database based on the search query
+    console.log("searchQuery: ", searchQuery);
+    // const users = await User.find({ isDeleted: false, ...searchQuery });
+    const users = await User.find({ searchQuery });
+
+    // const users = await User.find({
+    //   username: new RegExp(`^${username}$`, "i"),
+    //   isDeleted: false,
+    // });
+
+    // const users = await User.find({
+    //   isDeleted: false,
+    // });
 
     if (users.length === 0) {
       return res
@@ -123,15 +154,35 @@ const searchUsers = async (req: Request, res: Response) => {
         .json({ message: "No users found matching the search criteria" });
     }
 
-    res.status(200).json({ message: "Users found", users });
+    res.status(200).json({ message: "Users found", username, users });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error searching for users", error });
   }
 };
-
+*/
 const deleteUser = async (req: Request, res: Response) => {
   const { username } = req.params;
-  res.json(username);
+
+  try {
+    const deletedUser = await User.findOneAndUpdate(
+      {
+        username: new RegExp(`^${username}$`, "i"),
+      },
+      { $set: { isDeleted: true } },
+      { new: true }
+    ); // Find the user and mark them as deleted (soft delete)
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "User deleted successfully", user: deletedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching for users", error });
+  }
 };
 
 const updateUser = async (req: Request, res: Response) => {

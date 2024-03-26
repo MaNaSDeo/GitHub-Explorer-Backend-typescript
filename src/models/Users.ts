@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: [true, "Please provide a name"],
+    // collation: { locale: 'en', strength: 2 }
   },
   id: {
     type: Number,
@@ -57,8 +58,10 @@ const userSchema = new mongoose.Schema({
   updated_at: {
     type: String,
   },
-  friends: {
-    type: Object,
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  isDeleted: {
+    type: Boolean,
+    default: false,
   },
 });
 
