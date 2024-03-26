@@ -38,13 +38,10 @@ Create a backend service using Node.js and Express.js that interfaces with the G
 ## Technical Requirements
 - **Backend**: Node.js with Express.js framework.
 - **Database**: MongoDB
-- **Error Handling**: Robust error handling strategies.
-- **Code Quality**: Clean, well-documented code.
 
 ## Submission
-- **Repository Link**: [Your Git repository URL]
-- **Deployment URL**: [Your Render deployment URL]
-- **Submission Form**: Google Form Link
+- **Repository Link**: [\[Git repository URL\]](https://github.com/MaNaSDeo/GitHub-Explorer-Backend-typescript)
+- **Deployment URL**: [\[Render URL\]](https://github-explorer-backend-typescript.onrender.com/api/v1)
 
 ## Additional Notes
 - TypeScript was used for this project instead of JavaScript.
