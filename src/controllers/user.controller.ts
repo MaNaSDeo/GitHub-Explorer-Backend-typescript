@@ -94,59 +94,19 @@ const searchUsers = async (req: Request, res: Response) => {
   const { ...queries } = req.query;
 
   try {
-    const users = await User.find({ ...queries });
-
-    if (users.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No users found matching the search criteria" });
-    }
-    console.log("queries: ", queries);
-    console.log("users: ", users);
-
-    res.status(200).json({ message: "Users found!", queries, users });
-  } catch (error) {
-    res.status(500).json({ message: "Error searching for users", error });
-  }
-};
-
-/*
-const searchUsers = async (req: Request, res: Response) => {
-  const { username, location, ...otherParams } = req.query;
-
-  try {
     const searchQuery: SearchQuery = {};
 
-    if (username) {
-      searchQuery.username = new RegExp(username as string, "i");
-    }
-
-    if (location) {
-      searchQuery.location = new RegExp(location as string, "i");
-    }
-
-    Object.keys(otherParams).forEach((param) => {
-      if (!isNaN(Number(otherParams[param]))) {
-        searchQuery[param] = Number(otherParams[param]);
-      } else if (typeof otherParams[param] === "boolean") {
-        searchQuery[param] = otherParams[param] === "true";
+    Object.keys(queries).forEach((param) => {
+      if (!isNaN(Number(queries[param]))) {
+        searchQuery[param] = Number(queries[param]);
+      } else if (typeof queries[param] === "boolean") {
+        searchQuery[param] = queries[param] === "true";
       } else {
-        searchQuery[param] = new RegExp(otherParams[param] as string, "i");
+        searchQuery[param] = new RegExp(queries[param] as string, "i");
       }
     });
 
-    console.log("searchQuery: ", searchQuery);
-    // const users = await User.find({ isDeleted: false, ...searchQuery });
-    const users = await User.find({ searchQuery });
-
-    // const users = await User.find({
-    //   username: new RegExp(`^${username}$`, "i"),
-    //   isDeleted: false,
-    // });
-
-    // const users = await User.find({
-    //   isDeleted: false,
-    // });
+    const users = await User.find({ isDeleted: false, ...searchQuery });
 
     if (users.length === 0) {
       return res
@@ -154,13 +114,12 @@ const searchUsers = async (req: Request, res: Response) => {
         .json({ message: "No users found matching the search criteria" });
     }
 
-    res.status(200).json({ message: "Users found", username, users });
+    res.status(200).json({ message: "Users found!", users });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error searching for users", error });
   }
 };
-*/
+
 const deleteUser = async (req: Request, res: Response) => {
   const { username } = req.params;
 
